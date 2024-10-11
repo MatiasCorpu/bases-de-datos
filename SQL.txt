@@ -1,0 +1,257 @@
+SQL:
+
+grup by:
+se usa para agrupar filas que tienen valores identicos en una o mas columnas
+se usa con funciones de agregacion  (como COUNT, SUM, AVG, MAX, MIN), para producir resumenes de datos
+
+SELECT columna1, columna2, función_agregación(columna3)
+FROM tabla
+GROUP BY columna1, columna2;
+
+
+
+Consideraciones Adicionales
+Columnas en el SELECT: Todas las columnas seleccionadas que no son parte de una función de agregación deben estar incluidas en la cláusula GROUP BY.
+
+Orden de Ejecución: La cláusula GROUP BY se evalúa después de las cláusulas FROM y WHERE, pero antes de las cláusulas HAVING y ORDER BY.
+
+HAVING Clause: Similar a WHERE, pero se usa para filtrar grupos después de que se haya aplicado el GROUP BY. Por ejemplo, si deseas filtrar productos que tienen un total vendido mayor que 100:
+
+SELECT producto, SUM(cantidad) as total_vendido
+FROM ventas
+GROUP BY producto
+HAVING SUM(cantidad) > 100;
+------------------------------------------------------------------
+like '%cuaderno%' -- cuaderno tapa dura | cuaderno espiralado | nuevo cuaderno. Cordoba C�rdoba 
+
+-----------------------------------------------------------------------------------
+
+FUNCIONES DE fecha (se usan con select)
+
+GETDATE() -> fecha hoy
+DATEADD(dia,mes o anio, constante a sumar o restar, fecha) -> cuentas con fecha
+YEAR(fecha) -> obtiene año
+MONTH(fecha) -> obtine mes
+DAY(fecha) -> obtiene dia
+
+
+cast(FechaPedido as date) para quitarle a la fecha la hora
+
+
+--------------------------------------------------------------
+La cláusula WHERE NOT EXISTS en SQL se usa para comprobar la no existencia de filas en una subconsulta.
+ Devuelve las filas donde la subconsulta no devuelve ningún resultado.
+
+--------------------------------------------------------------------
+SELECT c.NomCli, p.NroCli, COUNT(distinct(p.NroArt)) as [art>100]
+from Pedido p
+join Articulo A ON a.NroArt = p.NroArt
+join Cliente c on c.NroCli = p.NroCli
+WHERE a.Precio > 100 
+GROUP BY c.NomCli, p.NroCli
+HAVING COUNT(distinct(p.NroArt)) > 1
+
+
+FROM: Determina la tabla principal.
+JOIN: Combina las tablas según las condiciones de unión.
+WHERE: Filtra las filas según la condición.
+SELECT: Selecciona las columnas y calcula los valores agregados.
+GROUP BY: Agrupa las filas seleccionadas.
+HAVING: Filtra los grupos basados en la condición de agregado.
+
+
+-----------------------------------------------------------
+ESTRUCTURAS DE VISTAS:
+
+CREATE VIEW nombre_vista AS
+SELECT columnas
+FROM tablas
+WHERE condiciones;
+
+SELECT * FROM nom_vista;
+
+------------------------------------------------------------
+ESTRUCTURA DE FUNCIONES:
+
+CREATE FUNCTION nombre_funcion(
+    @argumento1 tipo_dato,
+    @argumento2 tipo_dato,
+    ...
+)
+RETURNS tipo_retorno
+AS
+BEGIN
+    -- Cuerpo de la función
+    -- Aquí se escriben las consultas SQL y la lógica necesaria
+    RETURN valor_o_resultado;
+END;
+
+-solamente se crea una vez la funcion para usarla muchas veces 
+-se pueden usar en otras querys
+
+
+
+SELECT * FROM nom_vista;
+
+---------------------------------------------------------------------------------
+ESTRUCTURAS DE TRIGGERS:
+
+CREATE TRIGGER NombreDelTrigger
+ON NombreDeLaTabla
+FOR INSERT, UPDATE, DELETE --no lleva el for aveces creo
+AS
+BEGIN
+    -- Cuerpo del trigger
+END;
+
+
+----
+
+ej de cómo crear un trigger en SQL Server para realizar un borrado lógico de clientes:
+
+CREATE TRIGGER BorradoLogicoCliente
+ON Cliente
+INSTEAD OF DELETE
+AS
+BEGIN
+    UPDATE Cliente
+    SET Borrado = 1 -- Marcar como borrado
+    WHERE CodCli IN (SELECT CodCli FROM deleted);
+END;
+
+BorradoLogicoCliente: Es el nombre que le das al trigger.
+Cliente: Es el nombre de la tabla en la que se activará el trigger.
+INSTEAD OF DELETE: Indica que el trigger se ejecutará en lugar de una operación de borrado físico (DELETE).
+deleted: Es una tabla especial que contiene las filas que están siendo eliminadas. Usamos esta tabla en la cláusula WHERE para seleccionar las filas que se están eliminando y actualizar su estado de borrado a 1 (indicando que han sido marcadas como borradas).
+
+
+se usa:
+
+DELETE
+FROM Cliente
+WHERE CodCli = 1;
+
+
+--un trigger no puede recibir parametros como una funcion
+--se ejecuta solo no hace falta hacer como en las vistas, funciones, procedimientos.Se ejecuta de forma automatica
+
+
+AFTER Triggers:Se ejecutan después de que una operación de INSERT, UPDATE o DELETE se ha realizado con éxito.
+AFTER INSERT
+AFTER UPDATE
+AFTER DELETE
+
+
+INSTEAD OF Triggers:Se ejecutan en lugar de la operación INSERT, UPDATE o DELETE. Estos triggers permiten interceptar y reemplazar la operación con una lógica personalizada.
+INSTEAD OF INSERT
+INSTEAD OF UPDATE
+INSTEAD OF DELETE
+
+DDL Triggers:Se ejecutan en respuesta a eventos DDL como CREATE, ALTER, DROP
+AFTER CREATE
+AFTER ALTER
+AFTER DROP
+
+
+tablas locas
+inserted
+deleted
+
+---------------------------------------------------------------------------------
+PROCEDURES
+
+Características de los procedimientos almacenados:
+Reutilización del código: Se pueden reutilizar en múltiples aplicaciones o en diferentes
+partes de una misma aplicación.
+
+Seguridad: Pueden ayudar a controlar el acceso a los datos al otorgar permisos a los procedimientos almacenados en lugar de a las tablas subyacentes.
+Optimización: El plan de ejecución de un procedimiento almacenado se puede almacenar en la caché de procedimientos, mejorando el rendimiento.
+Facilidad de mantenimiento: Los cambios en la lógica se realizan en un solo lugar.
+
+Estructura básica de un procedimiento almacenado:
+
+CREATE PROCEDURE NombreDelProcedimiento
+    @Parametro1 TipoDato,
+    @Parametro2 TipoDato OUTPUT
+AS
+BEGIN
+    -- Cuerpo del procedimiento
+	SELECT @Parametro2 = COUNT(*)
+	FROM Tabla
+	WHERE Columna = @Parametro1;
+END;
+
+
+
+uso:
+EXEC NombreDelProcedimiento @Parametro1 = Valor1, @Parametro2 = Valor2;
+ej:
+EXEC ObtenerClientesPorCiudad @Ciudad = 'Madrid';
+
+--creo que con los procedure se pueden validar los datos
+--no es necesario que se le pase paremetros a los procedures
+--no retornan nada
+
+---------------------------------------------------------------------------------
+
+DDL, que significa Data Definition Language (Lenguaje de Definición de Datos),
+es un subconjunto del lenguaje SQL utilizado para definir y gestionar la estructura
+de las bases de datos. Las sentencias DDL son aquellas que permiten crear, modificar
+y eliminar estructuras de datos como bases de datos, tablas, índices, y vistas.
+
+---------------------------------------------------------------------------------
+
+CREACION DE TABLAS:
+
+CREATE TABLE NombreDeLaTabla (
+    NombreDeColumna1 TipoDeDato1 Restricciones,
+    NombreDeColumna2 TipoDeDato2 Restricciones,
+    ...
+    NombreDeColumnaN TipoDeDatoN Restricciones,
+    PRIMARY KEY (NombreDeColumna1)
+);
+
+
+---------------------------------------------------------------------------------
+
+INSERTAR DATOS EN TABLAS:
+
+INSERT INTO NombreDeLaTabla (Columna1, Columna2, ..., ColumnaN)
+VALUES (Valor1, Valor2, ..., ValorN);
+
+---------------------------------------------------------------------------------
+
+AGREGAR UN ATRIBUTO NUEVO A UNA TABLA YA CREADA:
+ALTER TABLE NombreDeLaTabla
+ADD NombreDelNuevoAtributo TipoDeDato;
+
+
+---------------------------------------------------------------------------------
+
+ACTUALIZAR UNA TABLA YA CREADA:
+
+UPDATE NombreDeLaTabla
+SET NombreDeColumna = NuevoValor
+WHERE Condicion;
+---------------------------------------------------------------------------------
+
+BORRADO DE UNA FILA DE UNA TABLA
+
+delete 
+from nomTabla
+where condicion
+---------------------------------------------------------------------------------
+TABLA QUE GUARDA SQL SERVER
+
+inserted = ultimo insertado 
+delete = ultimo borrado 
+---------------------------------------------------------------------------------
+no lo vimos pero esta en un ejercicio
+
+CONSTRAINT =
+alter TABLE Ejemplar
+ADD CONSTRAINT FK_Ejemplar_Pelicula
+FOREIGN KEY (CodPel) REFERENCES Pelicula(CodPel)
+ON DELETE CASCADE;
+
+---------------------------------------------------------------------------------

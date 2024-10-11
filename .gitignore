@@ -1,0 +1,21 @@
+# Ignorar archivos y carpetas de Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ignorar archivos innecesarios de SQL Server
+*.mdf
+*.ldf
+*.ndf
+*.bak
+*.trn
+
+# Ignorar otros archivos temporales
+*.log
+*.tmp
+
+# No ignorar archivos .txt y los pdf
+!*.pdf
+!*.txt
